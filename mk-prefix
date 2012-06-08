@@ -16,12 +16,22 @@ if [ -f $BASE/$1.conf ] || [ -f $BASE/$1.cmds ] ; then
 fi
 
 
-/usr/bin/ssh -t -t -p $PORT -l $USER $HOST < $1.cmds | grep "*>" | awk {'print$2'} > $PREFIXTEMP1
+/usr/bin/ssh -t -t -p $PORT -l $USER $HOST < $1.cmds \
+    | grep "*>" \
+    | awk {'print$2'} \
+    | grep -Ev '.0\"$|/25|/26|/27|/28|/29|/30|/32' \
+    > $PREFIXTEMP1
 
 cat > $PREFIXTEMP2 << EOF
-/sys note set show-at-login=yes note="Using six.rsc from rad.net.id, $(date -R) $(wc -l $PREFIXTEMP1)"
+# Script untuk menambahkan IP Address BGP yang terdaftar di SIX
+# ke RouterOS dalam ADDRESS-LIST dengan nama "nice"
+# Created by Mahyuddin Susanto <udienz@rad.net.id>
+# Inspired by http://ixp.mikrotik.co.id/download/nice.rsc
+# Last generate $(date -R)
+
+/sys note set show-at-login=yes note="Using six.rsc from rad.net.id, $(date -R)"
 /ip firewall address-list
-add list=nice address="1.2.3.4"
+add list=six address="1.2.3.4"
 rem [find list="six"]
 EOF
 
