@@ -19,7 +19,7 @@ fi
 /usr/bin/ssh -t -t -p $PORT -l $USER $HOST < $1.cmds \
     | grep "*>" \
     | awk {'print$2'} \
-    | grep -Ev '.0\"$|/25|/26|/27|/28|/29|/30|/32' \
+    | sed -e 's/.0$/.0\/24/g' \
     > $PREFIXTEMP1
 
 cat > $PREFIXTEMP2 << EOF
@@ -38,11 +38,15 @@ EOF
 cat $PREFIXTEMP1 | while read ip
     do
     # add list=nice address="120.160.0.0/11"
-    echo "add list six address=\"$ip\"" >> $PREFIXTEMP2
+    echo "add list=six address=\"$ip\"" >> $PREFIXTEMP2
     done
 
-sed -i 's/.0$/.0\/24/g' $PREFIXTEMP2
+grep -Ev '.0\"$|/25|/26|/27|/28|/29|/30|/32' $PREFIXTEMP2 > $BASE/six.rsc
+chmod +r $BASE/six.rsc
+cp $BASE/six.rsc $HOME/public_html/six.rsc
 
-cp $PREFIXTEMP2 $BASE/six.rsc
+#mv six.rsc.tmp six.rsc
+
+#cp $PREFIXTEMP2 $BASE/six.rsc
 
 rm -f $PREFIXTEMP1 $PREFIXTEMP2
