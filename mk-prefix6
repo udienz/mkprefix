@@ -1,0 +1,53 @@
+#!/bin/bash
+
+BASE=$HOME/project/mkprefix
+PREFIXTEMP1=$(mktemp)
+PREFIXTEMP2=$(mktemp)
+NAME=$1
+
+if [ ! -d $BASE ] ; then
+    mkdir -p $BASE
+fi
+
+cd $BASE
+
+if [ -f $BASE/$1.conf ] || [ -f $BASE/$1.cmds ] ; then
+    . $BASE/$1.conf
+    else
+    echo "cannot find $BASE/$NAME.cmds or $BASE/$NAME.conf"
+    exit 2
+fi
+
+
+/usr/bin/ssh -t -t -p $PORT -l $USER $HOST < $1.cmds \
+    | grep "*>" \
+    | sed -e 's/i/ /g' \
+    | awk {'print$2'} \
+    > $PREFIXTEMP1
+
+dos2unix -n --  $PREFIXTEMP1  $PREFIXTEMP1.unix
+    #| sed -e 's/.0$/.0\/24/g' \
+cat > $PREFIXTEMP2 << EOF
+# Script untuk menambahkan IP Address BGP yang terdaftar di SIX
+# ke RouterOS dalam ADDRESS-LIST dengan nama "nice"
+# Created by Mahyuddin Susanto <udienz@rad.net.id>
+# Inspired by http://ixp.mikrotik.co.id/download/nice.rsc
+# Last generate $(date -R)
+
+/sys note set show-at-login=yes note="Using six.rsc from rad.net.id, $(date -R)"
+/ipv6 firewall address-list
+add list=$NAME address="::1"
+rem [find list="$NAME"]
+EOF
+
+cat $PREFIXTEMP1.unix | while read ip
+    do
+    # add list=nice address="120.160.0.0/11"
+    echo "add list=$NAME address=\"$ip\"" >> $PREFIXTEMP2
+    done
+
+grep -Ev '/64' $PREFIXTEMP2 > $BASE/$NAME.rsc
+chmod +r $BASE/$NAME.rsc
+ cp $BASE/$NAME.rsc $HOME/public_html/prefix/$NAME.rsc
+cp $PREFIXTEMP1.unix $NAME.dump 
+rm -f $PREFIXTEMP1* $PREFIXTEMP2
