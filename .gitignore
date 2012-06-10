@@ -1,3 +1,5 @@
 *.cmds
 *.conf
 *.rsc
+*.dump
+*.unix

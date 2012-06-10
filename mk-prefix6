@@ -48,6 +48,7 @@ cat $PREFIXTEMP1.unix | while read ip
 
 grep -Ev '/64' $PREFIXTEMP2 > $BASE/$NAME.rsc
 chmod +r $BASE/$NAME.rsc
- cp $BASE/$NAME.rsc $HOME/public_html/prefix/$NAME.rsc
-cp $PREFIXTEMP1.unix $NAME.dump 
+cp $BASE/$NAME.rsc /var/www/prefix/$NAME.rsc
+cp $PREFIXTEMP1.unix /var/www/prefix/$NAME.dump
+sudo chmod 755 /var/www/prefix/ -R
 rm -f $PREFIXTEMP1* $PREFIXTEMP2

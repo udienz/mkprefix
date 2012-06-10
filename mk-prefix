@@ -3,25 +3,29 @@
 BASE=$HOME/project/mkprefix
 PREFIXTEMP1=$(mktemp)
 PREFIXTEMP2=$(mktemp)
+NAME=$1
 
 if [ ! -d $BASE ] ; then
     mkdir -p $BASE
 fi
 
+cd $BASE
+
 if [ -f $BASE/$1.conf ] || [ -f $BASE/$1.cmds ] ; then
     . $BASE/$1.conf
     else
-    echo "cannot find $BASE/$1.cmds or $BASE/$1.conf"
+    echo "cannot find $BASE/$NAME.cmds or $BASE/$NAME.conf"
     exit 2
 fi
 
 
 /usr/bin/ssh -t -t -p $PORT -l $USER $HOST < $1.cmds \
     | grep "*>" \
+    | sed -e 's/i/ /g' -e 's/*.0$/.0\/24/g' \
     | awk {'print$2'} \
-    | sed -e 's/.0$/.0\/24/g' \
     > $PREFIXTEMP1
 
+    #| sed -e 's/.0$/.0\/24/g' \
 cat > $PREFIXTEMP2 << EOF
 # Script untuk menambahkan IP Address BGP yang terdaftar di SIX
 # ke RouterOS dalam ADDRESS-LIST dengan nama "nice"
@@ -31,22 +35,19 @@ cat > $PREFIXTEMP2 << EOF
 
 /sys note set show-at-login=yes note="Using six.rsc from rad.net.id, $(date -R)"
 /ip firewall address-list
-add list=six address="1.2.3.4"
-rem [find list="six"]
+add list=$NAME address="1.2.3.4"
+rem [find list="$NAME"]
 EOF
 
 cat $PREFIXTEMP1 | while read ip
     do
     # add list=nice address="120.160.0.0/11"
-    echo "add list=six address=\"$ip\"" >> $PREFIXTEMP2
+    echo "add list=$NAME address=\"$ip\"" >> $PREFIXTEMP2
     done
 
-grep -Ev '.0\"$|/25|/26|/27|/28|/29|/30|/32' $PREFIXTEMP2 > $BASE/six.rsc
-chmod +r $BASE/six.rsc
-cp $BASE/six.rsc $HOME/public_html/six.rsc
-
-#mv six.rsc.tmp six.rsc
-
-#cp $PREFIXTEMP2 $BASE/six.rsc
-
+grep -Ev '/25|/26|/27|/28|/29|/30|/32' $PREFIXTEMP2 > $BASE/$NAME.rsc
+chmod +r $BASE/$NAME.rsc
+cp $BASE/$NAME.rsc /var/www/prefix/$NAME.rsc
+cp $PREFIXTEMP1 /var/www/six.dump
+chmod 755 /var/www//prefix/ -R
 rm -f $PREFIXTEMP1 $PREFIXTEMP2
