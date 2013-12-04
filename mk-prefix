@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE=$HOME/project/mkprefix
+BASE=$HOME/git/mkprefix
 PREFIXTEMP1=$(mktemp)
 PREFIXTEMP2=$(mktemp)
 NAME=$1
@@ -45,9 +45,11 @@ cat $PREFIXTEMP1 | while read ip
     echo "add list=$NAME address=\"$ip\"" >> $PREFIXTEMP2
     done
 
+# Remove prefix lower than /24
+
 grep -Ev '/25|/26|/27|/28|/29|/30|/32' $PREFIXTEMP2 > $BASE/$NAME.rsc
 chmod +r $BASE/$NAME.rsc
-cp $BASE/$NAME.rsc /var/www/prefix/$NAME.rsc
-cp $PREFIXTEMP1 /var/www/prefix/$NAME.dump
-chmod 755 /var/www//prefix/ -R
+mv $BASE/$NAME.rsc $BASE/out/$NAME.rsc
+cp $PREFIXTEMP1 $BASE/out/$NAME.dump
+chmod 755 $BASE/out/ -R
 rm -f $PREFIXTEMP1 $PREFIXTEMP2
