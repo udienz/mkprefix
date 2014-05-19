@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 BASE=$HOME/git/mkprefix
 PREFIXTEMP1=$(mktemp)
 PREFIXTEMP2=$(mktemp)
@@ -47,7 +47,8 @@ cat $PREFIXTEMP1 | while read ip
 
 # Remove prefix lower than /24
 
-grep -Ev '/25|/26|/27|/28|/29|/30|/32' $PREFIXTEMP2 > $BASE/$NAME.rsc
+grep -Ev '/20|/21|/22|/25|/26|/27|/28|/29|/30|/32' $PREFIXTEMP2 > $BASE/$NAME.rsc
+grep -Ev '/20|/25|/26|/27|/28|/29|/30|/32' $PREFIXTEMP2 > $BASE/$NAME.rsc
 chmod +r $BASE/$NAME.rsc
 mv $BASE/$NAME.rsc $BASE/out/$NAME.rsc
 cp $PREFIXTEMP1 $BASE/out/$NAME.dump
